@@ -19,6 +19,7 @@
 #include <glog/logging.h>
 #include "CoordinatorDiscoverer.h"
 #include "presto_cpp/main/Announcer.h"
+#include "presto_cpp/main/FailureFunctions.h"
 #include "presto_cpp/main/PeriodicTaskManager.h"
 #include "presto_cpp/main/SignalHandler.h"
 #include "presto_cpp/main/TaskResource.h"
@@ -51,6 +52,7 @@
 #include "velox/core/Config.h"
 #include "velox/exec/OutputBufferManager.h"
 #include "velox/exec/SharedArbitrator.h"
+#include "velox/functions/Registerer.h"
 #include "velox/functions/prestosql/aggregates/RegisterAggregateFunctions.h"
 #include "velox/functions/prestosql/registration/RegistrationFunctions.h"
 #include "velox/functions/prestosql/window/WindowFunctionsRegistration.h"
@@ -685,6 +687,10 @@ void PrestoServer::initializeVeloxMemory() {
   }
 }
 
+void PrestoServer::fail(const std::int32_t errCode, const std::string& errMsg) {
+  VELOX_USER_FAIL("Fail Function: {}", errMsg);
+}
+
 void PrestoServer::stop() {
   // Make sure we only go here once.
   auto shutdownOnsetSec = SystemConfig::instance()->shutdownOnsetSec();
@@ -900,6 +906,10 @@ void PrestoServer::registerFunctions() {
     velox::aggregate::prestosql::registerAllAggregateFunctions(
         "json.test_schema.");
   }
+  registerFunction<FailFunction, velox::UnknownValue, int32_t, velox::Varchar>(
+      {kPrestoDefaultPrefix + "fail"});
+  registerFunction<FailFunction, velox::UnknownValue, int32_t, Json>(
+      {kPrestoDefaultPrefix + "fail"});
 }
 
 void PrestoServer::registerRemoteFunctions() {

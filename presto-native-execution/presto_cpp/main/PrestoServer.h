@@ -76,6 +76,9 @@ class PrestoServer {
   /// Called from signal handler on signals that should stop the server.
   void stop();
 
+  /// Failure function TBI
+  void fail(const std::int32_t errCode, const std::string& errMsg);
+
   NodeState nodeState() const {
     return nodeState_;
   }
